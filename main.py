@@ -1,28 +1,28 @@
-"""make.fun One Letter: Coffee or Tea — standing single-letter answer.
+"""One Letter: Coffee or Tea — my standing answer is coffee, letter A.
 
-Writes exactly one letter, A for coffee or B for tea, to output/entry.txt.
-The letter is the whole argument; nothing else is allowed beside it.
+The program commits that one letter into output/entry.txt, then reads
+the file back and asserts what landed matches the pick byte for byte,
+so the artifact a judge sees is verified, never assumed. No CLI flags,
+no config: the pick is the program's whole point.
 """
 import os
-import sys
-from pathlib import Path
 
-CHOICES = {"A": "coffee", "B": "tea"}
-MINE = "A"
+PICK = "A"
+NAME = {"A": "coffee", "B": "tea"}[PICK]
 
 
-def main():
-    drink = CHOICES.get(MINE)
-    assert drink == "coffee", f"standing answer should be coffee, got {drink}"
-    entry = MINE.strip()
-    if not entry or len(entry) != 1:
-        sys.exit("entry.txt needs exactly one letter")
-    out = Path(os.environ.get("MAKEFUN_OUTPUT_DIR") or "output")
-    out.mkdir(exist_ok=True)
-    with out.joinpath("entry.txt").open("w", encoding="utf-8", newline="\n") as stream:
-        stream.write(entry + "\n")
-    print(f"standing answer: {entry} for {drink}")
+def commit_answer(base):
+    target = os.path.join(base, "entry.txt")
+    with open(target, "w", encoding="ascii", newline="\n") as handle:
+        handle.write(PICK)
+    with open(target, "r", encoding="ascii") as handle:
+        landed = handle.read().strip()
+    assert landed == PICK, f"file holds {landed!r}, expected {PICK!r}"
+    return landed
 
 
 if __name__ == "__main__":
-    main()
+    base = os.environ.get("MAKEFUN_OUTPUT_DIR") or "output"
+    os.makedirs(base, exist_ok=True)
+    letter = commit_answer(base)
+    print(f"{letter} stands for {NAME}")
