@@ -1,28 +1,26 @@
-"""One Letter: Coffee or Tea — my standing answer is coffee, letter A.
+"""Coffee vs Tea — single-letter artifact emitter for the one-letter gate.
 
-The program commits that one letter into output/entry.txt, then reads
-the file back and asserts what landed matches the pick byte for byte,
-so the artifact a judge sees is verified, never assumed. No CLI flags,
-no config: the pick is the program's whole point.
+The program stores its chosen letter in an output folder, reloads the
+bytes from disk, cross-checks them against the expected value, and reports
+a compact JSON verdict. Runs on plain Python, no extras required.
 """
-import os
-
-PICK = "A"
-NAME = {"A": "coffee", "B": "tea"}[PICK]
+import json
+import pathlib
 
 
-def commit_answer(base):
-    target = os.path.join(base, "entry.txt")
-    with open(target, "w", encoding="ascii", newline="\n") as handle:
-        handle.write(PICK)
-    with open(target, "r", encoding="ascii") as handle:
-        landed = handle.read().strip()
-    assert landed == PICK, f"file holds {landed!r}, expected {PICK!r}"
-    return landed
+def run():
+    folder = pathlib.Path("output")
+    folder.mkdir(parents=True, exist_ok=True)
+    artifact = folder / "entry.txt"
+    artifact.write_bytes(LETTER.encode("ascii"))
+    raw = artifact.read_bytes().decode("utf-8")
+    core = raw.strip()
+    if core != LETTER:
+        raise ValueError("artifact mismatch: got %r" % core)
+    return core
 
 
+LETTER = "A"  # coffee pick, gate: exactly one character
 if __name__ == "__main__":
-    base = os.environ.get("MAKEFUN_OUTPUT_DIR") or "output"
-    os.makedirs(base, exist_ok=True)
-    letter = commit_answer(base)
-    print(f"{letter} stands for {NAME}")
+    result = run()
+    print(json.dumps({"result": "ok", "letter": result}))
