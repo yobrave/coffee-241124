@@ -1,26 +1,31 @@
-"""Coffee vs Tea — single-letter artifact emitter for the one-letter gate.
+"""Coffee or Tea one-letter entry.
 
-The program stores its chosen letter in an output folder, reloads the
-bytes from disk, cross-checks them against the expected value, and reports
-a compact JSON verdict. Runs on plain Python, no extras required.
+Emits the single-letter answer into /output/entry.txt, rereads the file,
+and verifies the stored byte equals the decision before printing a JSON
+verdict. Standard library only, no network, no CLI arguments.
 """
 import json
-import pathlib
+import os
+
+SELECTION = "A"
+DISPLAY = {"A": "coffee", "B": "tea"}
+KEY = "MAKEFUN_OUTPUT_DIR"
 
 
-def run():
-    folder = pathlib.Path("output")
-    folder.mkdir(parents=True, exist_ok=True)
-    artifact = folder / "entry.txt"
-    artifact.write_bytes(LETTER.encode("ascii"))
-    raw = artifact.read_bytes().decode("utf-8")
-    core = raw.strip()
-    if core != LETTER:
-        raise ValueError("artifact mismatch: got %r" % core)
-    return core
+def deliver(target_dir):
+    if not os.path.isdir(target_dir):
+        os.makedirs(target_dir, exist_ok=True)
+    path = os.path.join(target_dir, "entry.txt")
+    with open(path, "w", encoding="utf-8") as out:
+        out.write(SELECTION)
+    with open(path, "r", encoding="utf-8") as back:
+        stored = back.read().strip()
+    if stored != SELECTION:
+        raise RuntimeError("verification failed: stored=%r" % stored)
+    return stored
 
 
-LETTER = "A"  # coffee pick, gate: exactly one character
 if __name__ == "__main__":
-    result = run()
-    print(json.dumps({"result": "ok", "letter": result}))
+    root = os.environ.get(KEY) or "output"
+    final = deliver(root)
+    print(json.dumps({"status": "verified", "value": final, "drink": DISPLAY[final]}))
