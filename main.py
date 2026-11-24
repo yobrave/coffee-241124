@@ -28,4 +28,4 @@ def deliver(target_dir):
 if __name__ == "__main__":
     root = os.environ.get(KEY) or "output"
     final = deliver(root)
-    print(json.dumps({"status": "verified", "value": final, "drink": DISPLAY[final]}))
+    print(json.dumps({"status": "verified", "value": final, "drink": DISPLAY[final], "source": "fresh reentry"}))
